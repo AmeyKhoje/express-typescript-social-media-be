@@ -18,12 +18,14 @@ class AuthenticationService {
   public UserModel = userModel;
 
   public async register(userData: CreateUserDto) {
-    const isUserExistsWithEmail = this.UserModel.findOne({
+    const isUserExistsWithEmail = await this.UserModel.findOne({
       email: userData.email,
     });
-    const isUserExistsWithMobile = this.UserModel.findOne({
+    const isUserExistsWithMobile = await this.UserModel.findOne({
       mobile: userData.mobile,
     });
+
+    console.log(isUserExistsWithEmail, isUserExistsWithMobile);
 
     if (isUserExistsWithEmail || isUserExistsWithMobile) {
       throw new AlreadyExistsException('User', 'Email/Mobile');

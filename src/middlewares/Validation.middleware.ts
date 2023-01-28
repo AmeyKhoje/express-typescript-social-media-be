@@ -11,8 +11,10 @@ const validationMiddleware = (
   return (request: Request, response: Response, next: NextFunction) => {
     validate(plainToClass(type, request.body), { skipMissingProperties }).then(
       (errors: ValidationError[]) => {
-        if (errors.length) {
+        if (errors?.length) {
           const finalErrors = getErrorMessageSimplified(errors);
+          console.log(finalErrors);
+
           next(new ValidationErrorException(400, finalErrors));
         } else {
           next();

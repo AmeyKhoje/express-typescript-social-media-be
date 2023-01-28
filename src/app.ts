@@ -3,6 +3,7 @@ import * as cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
 import { connect } from 'mongoose';
 import Controller from './interfaces/Controller.interface';
+// import cors from 'cors';
 
 config();
 
@@ -15,6 +16,8 @@ class App {
     this.connectToDatabase();
     this.initializeMiddleware();
     this.initializeControllers(controllers);
+
+    // this.app.use(cors());
   }
 
   public listenApp() {
@@ -24,7 +27,8 @@ class App {
   }
 
   public initializeMiddleware() {
-    this.app.use(express.json());
+    this.app.use(express.json({ limit: '200kb' }));
+    this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
   }
 
