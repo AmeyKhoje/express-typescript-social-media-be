@@ -14,6 +14,11 @@ class ReactionController {
 
   private initializeRoutes() {
     this.router.post(`${this.path}/:userId/_new`, authMiddleware, this.create);
+    this.router.delete(
+      `${this.path}/:userId/:postId/_delete`,
+      authMiddleware,
+      this.delete
+    );
   }
 
   public create = async (
@@ -35,6 +40,31 @@ class ReactionController {
       response.status(200).send({ success: true });
     } catch (error) {
       next(new HttpException(400, 'Failed to create reaction'));
+    }
+  };
+
+  public delete = async (
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) => {
+    const { userId, postId } = request.params;
+
+    try {
+      const reactionDeleted = await this.reactionService.delete(userId, postId);
+
+      if (!reactionDeleted) {
+        next(new HttpException(400, 'Failed to delete'));
+      }
+
+      response.status(200).send({ success: true });
+    } catch (error) {
+      next(
+        new HttpException(
+          400,
+          'Failed to delete reaction. Something went wrong. Check your network connectivity or try again later'
+        )
+      );
     }
   };
 }
