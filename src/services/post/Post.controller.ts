@@ -4,6 +4,7 @@ import authMiddleware from 'middlewares/Auth.middleware';
 import BasicPostDto from './BasicPost.dto';
 import PostService from './Post.service';
 import HttpException from 'exceptions/HttpException.exception';
+import NotFoundException from 'exceptions/NotFound.exception';
 
 class PostController {
   public path = '/posts';
@@ -21,6 +22,11 @@ class PostController {
       validationMiddleware(BasicPostDto),
       this.create
     );
+    this.router.get(
+      `${this.path}/:userId/_get`,
+      authMiddleware,
+      this.getPostsByUserId
+    );
   }
 
   public create = async (
@@ -36,6 +42,26 @@ class PostController {
       response.status(200).send({ success: true });
     } catch (error) {
       throw new HttpException(400, 'Failed to create post');
+    }
+  };
+
+  public getPostsByUserId = async (
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const posts = await this.postService.getPostsByUserId(
+        request.params.userId
+      );
+
+      if (!posts) {
+        throw new NotFoundException('Posts');
+      }
+
+      response.status(200).send({ success: true, data: posts });
+    } catch (error) {
+      next(new HttpException(400, 'Failed to get posts'));
     }
   };
 }
