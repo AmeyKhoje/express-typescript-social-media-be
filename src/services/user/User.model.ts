@@ -12,6 +12,7 @@ const userSchema = new Schema<UserInterface>({
   username: 'string',
   followers: [{ type: Types.ObjectId, ref: 'User' }],
   following: [{ type: Types.ObjectId, ref: 'User' }],
+  password: 'string',
 });
 
 const userModel = model('User', userSchema);

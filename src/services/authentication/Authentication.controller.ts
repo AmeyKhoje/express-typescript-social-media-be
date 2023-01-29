@@ -6,6 +6,7 @@ import CreateUserDto from 'services/user/CreateUser.dto';
 import HttpException from 'exceptions/HttpException.exception';
 import LoginDto from 'utils/form/dto/Login.dto';
 import { loggedInUserFields } from 'utils/constants/DataConstants';
+import WrongCredentialsException from 'exceptions/WrongCredentials.exception';
 
 class AuthenticationController {
   public path = '/auth';
@@ -24,7 +25,7 @@ class AuthenticationController {
     );
     this.router.post(
       `${this.path}/user/_login`,
-      validationMiddleware(LoginDto),
+      validationMiddleware(LoginDto, false, 'formData'),
       this.login
     );
   }
@@ -61,10 +62,13 @@ class AuthenticationController {
     const isRememberMeEnabled: boolean = !!request.body.isRememberMeEnabled;
 
     try {
-      const { user, cookie } = await this.authenticationService.login(
-        loginBody,
-        isRememberMeEnabled
-      );
+      const { user, cookie, message, success } =
+        await this.authenticationService.login(loginBody, isRememberMeEnabled);
+
+      if (!success) {
+        response.send({ success, message }).status(400);
+        next(new WrongCredentialsException());
+      }
 
       const loggedInUser = getSpecificFieldsFromDocument(
         user,

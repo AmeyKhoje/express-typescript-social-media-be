@@ -63,7 +63,7 @@ class AuthenticationService {
   }
 
   public async login(formData: LoginDto, isRememberMeEnabled: boolean = false) {
-    let user: Document;
+    let user: UserInterface;
     try {
       user = await this.UserModel.findOne({
         email: formData.email,
@@ -78,16 +78,16 @@ class AuthenticationService {
 
     let isPasswordMatching: boolean;
     try {
-      isPasswordMatching = await compare(
-        formData.password,
-        user.get('password', null, { getters: false })
-      );
+      isPasswordMatching = await compare(formData.password, user.password);
     } catch (error) {
       throw new HttpException(400, 'Something went wrong. Try after sometime');
     }
 
     if (!isPasswordMatching) {
-      throw new WrongCredentialsException();
+      return {
+        message: 'Wrong credentials',
+        success: false,
+      };
     }
 
     const tokenData: TokenData = this.createToken(user, isRememberMeEnabled);
@@ -96,6 +96,7 @@ class AuthenticationService {
     return {
       user,
       cookie,
+      success: true,
     };
   }
 

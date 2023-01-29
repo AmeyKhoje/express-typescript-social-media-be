@@ -1,9 +1,9 @@
 import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
-import { connect } from 'mongoose';
+import { connect, set } from 'mongoose';
 import Controller from './interfaces/Controller.interface';
-// import cors from 'cors';
+import * as cors from 'cors';
 
 config();
 
@@ -16,8 +16,6 @@ class App {
     this.connectToDatabase();
     this.initializeMiddleware();
     this.initializeControllers(controllers);
-
-    // this.app.use(cors());
   }
 
   public listenApp() {
@@ -30,6 +28,7 @@ class App {
     this.app.use(express.json({ limit: '200kb' }));
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
+    this.app.use(cors());
   }
 
   public initializeControllers(controllers: Controller[]) {
@@ -43,6 +42,7 @@ class App {
       connect(`${process.env.DB_URL}/${process.env.DB_NAME}`, {
         keepAlive: true,
       });
+      set('strictQuery', false);
     } catch (error) {
       throw new Error('Error while connection');
     }
