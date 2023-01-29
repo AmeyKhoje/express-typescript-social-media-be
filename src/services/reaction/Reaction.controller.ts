@@ -2,6 +2,9 @@ import { NextFunction, Request, Response, Router } from 'express';
 import ReactionService from './Reaction.service';
 import HttpException from 'exceptions/HttpException.exception';
 import authMiddleware from 'middlewares/Auth.middleware';
+import validationMiddleware from 'middlewares/Validation.middleware';
+import CreateReactionDto from './Reaction.dto';
+import ApiResponse from 'responses/ApiResponse';
 
 class ReactionController {
   public path = '/reaction';
@@ -13,7 +16,12 @@ class ReactionController {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}/:userId/_new`, authMiddleware, this.create);
+    this.router.post(
+      `${this.path}/:userId/_new`,
+      authMiddleware,
+      validationMiddleware(CreateReactionDto),
+      this.create
+    );
     this.router.delete(
       `${this.path}/:userId/:postId/_delete`,
       authMiddleware,
@@ -35,7 +43,12 @@ class ReactionController {
     try {
       const reaction = await this.reactionService.create(reactionObject);
 
-      if (!reaction) next(new HttpException(400, 'Failed to create reaction'));
+      if (!reaction) {
+        response.send(
+          new ApiResponse(false, 'Failed to create reaction', [], {})
+        );
+        next(new HttpException(400, 'Failed to create reaction'));
+      }
 
       response.status(200).send({ success: true });
     } catch (error) {

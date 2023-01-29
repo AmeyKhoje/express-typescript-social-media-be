@@ -8,6 +8,20 @@ class ReactionService {
 
   public async create(data: CreateReactionDto) {
     let reaction;
+    let existingReaction;
+
+    try {
+      existingReaction = await this.ReactionModel.find({
+        to: data.to,
+        from: data.from,
+      });
+    } catch (error) {
+      throw new HttpException(400, 'Something went wrong');
+    }
+
+    if (existingReaction) {
+      return null;
+    }
 
     try {
       reaction = await this.ReactionModel.create(data);
