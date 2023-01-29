@@ -5,6 +5,8 @@ import BasicPostDto from './BasicPost.dto';
 import PostService from './Post.service';
 import HttpException from 'exceptions/HttpException.exception';
 import NotFoundException from 'exceptions/NotFound.exception';
+import sameUserMiddleware from 'middlewares/SameUser.middleware';
+import ApiResponse from 'responses/ApiResponse';
 
 class PostController {
   public path = '/posts';
@@ -19,6 +21,7 @@ class PostController {
     this.router.post(
       `${this.path}/_new`,
       authMiddleware,
+      sameUserMiddleware('author'),
       validationMiddleware(BasicPostDto),
       this.create
     );
@@ -37,10 +40,16 @@ class PostController {
     try {
       const postCreated = await this.postService.create(request.body);
       if (!postCreated) {
+        response
+          .status(400)
+          .send(new ApiResponse(false, 'Failed to create post', [], {}));
         throw new HttpException(400, 'Failed to create post');
       }
-      response.status(200).send({ success: true });
+      response.status(200).send(new ApiResponse(true, 'Post created', [], {}));
     } catch (error) {
+      response
+        .status(400)
+        .send(new ApiResponse(false, 'Failed to create post', [], {}));
       throw new HttpException(400, 'Failed to create post');
     }
   };
