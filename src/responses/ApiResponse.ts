@@ -6,13 +6,13 @@ class ApiResponse {
 
   constructor(
     success: boolean,
-    message: string,
-    errors: [],
-    data: [] | object
+    message?: string,
+    errors?: [],
+    data?: [] | object
   ) {
     this.success = success;
-    this.message = message;
-    this.errors = errors;
+    this.message = message || '';
+    this.errors = errors || [];
     this.data = data || {};
   }
 }
