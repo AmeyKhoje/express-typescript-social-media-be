@@ -9,6 +9,7 @@ class ReactionService {
   public async create(data: CreateReactionDto) {
     let reaction;
     let existingReaction;
+    let deletedReaction;
 
     try {
       existingReaction = await this.ReactionModel.find({
@@ -20,18 +21,23 @@ class ReactionService {
     }
 
     if (existingReaction) {
-      return null;
+      const deleted = await this.delete(data.from, data.to);
+      deletedReaction = deleted;
+    } else {
+      try {
+        reaction = await this.ReactionModel.create(data);
+
+        if (!reaction) throw new HttpException(400, 'Failed to react');
+      } catch (error) {
+        throw new HttpException(400, 'Failed to react');
+      }
     }
 
-    try {
-      reaction = await this.ReactionModel.create(data);
-
-      if (!reaction) throw new HttpException(400, 'Failed to react');
-    } catch (error) {
-      throw new HttpException(400, 'Failed to react');
+    if (deletedReaction) {
+      return { deletedReaction: true };
     }
 
-    return reaction;
+    return { reaction };
   }
 
   public async delete(userId: string, postId: string) {

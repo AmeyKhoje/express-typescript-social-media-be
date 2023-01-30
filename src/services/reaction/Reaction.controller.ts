@@ -41,7 +41,20 @@ class ReactionController {
     };
 
     try {
-      const reaction = await this.reactionService.create(reactionObject);
+      const { reaction, deletedReaction } = await this.reactionService.create(
+        reactionObject
+      );
+
+      if (deletedReaction) {
+        response.status(200).send({ success: true });
+      }
+
+      if (deletedReaction === false) {
+        response.send(
+          new ApiResponse(false, 'Failed to delete reaction', [], {})
+        );
+        next(new HttpException(400, 'Failed to delete reaction'));
+      }
 
       if (!reaction) {
         response.send(
@@ -50,7 +63,9 @@ class ReactionController {
         next(new HttpException(400, 'Failed to create reaction'));
       }
 
-      response.status(200).send({ success: true });
+      if (reaction) {
+        response.status(200).send({ success: true });
+      }
     } catch (error) {
       next(new HttpException(400, 'Failed to create reaction'));
     }
