@@ -9,6 +9,8 @@ import validationMiddleware from 'middlewares/Validation.middleware';
 import CreateUserDto from './CreateUser.dto';
 import ApiResponse from 'responses/ApiResponse';
 import CustomFormValidator from 'utils/form/helpers/CustomFormValidator';
+import sameUserMiddleware from 'middlewares/SameUser.middleware';
+import { userStatusesFromParam } from 'utils/constants/DataConstants';
 
 class UserController {
   public path = '/user';
@@ -37,7 +39,75 @@ class UserController {
       validationMiddleware(CreateUserDto),
       this.updateUser
     );
+    this.router.post(
+      `${this.path}/:userId/:statusRequired/_status-change`,
+      authMiddleware,
+      this.changeUserStatus
+    );
   }
+
+  public changeUserStatus = async (
+    request: Request,
+    response: Response,
+    next: NextFunction
+  ) => {
+    const userId = request.params.userId;
+    const statusRequested = userStatusesFromParam.includes(
+      request.params.statusRequired
+    )
+      ? request.params.statusRequired
+      : null;
+    let existingUser: UserInterface;
+    let updatedUser;
+
+    console.log('disal');
+
+    if (userId && statusRequested) {
+      try {
+        existingUser = await this.UserModel.findById(userId);
+      } catch (error) {
+        response
+          .status(400)
+          .send(new ApiResponse(false, 'Failed to find user'));
+        next(new HttpException(400, 'Failed to find user'));
+      }
+
+      if (!existingUser) {
+        response.status(404).send(new ApiResponse(false, 'User not found'));
+        next(new NotFoundException('User'));
+      }
+
+      try {
+        updatedUser = await this.UserModel.updateOne(
+          { _id: userId },
+          { status: statusRequested === 'active' ? 'ACTIVE' : 'DEACTIVE' }
+        );
+      } catch (error) {
+        response
+          .status(400)
+          .send(new ApiResponse(false, 'Failed to update user'));
+        next(new HttpException(400, 'Failed to update user'));
+      }
+
+      if (
+        updatedUser.acknowledged &&
+        updatedUser.matchedCount > 0 &&
+        updatedUser.modifiedCount > 0
+      ) {
+        response.status(200).send(new ApiResponse(true, 'User status changed'));
+      } else {
+        response
+          .status(400)
+          .send(new ApiResponse(false, 'Failed to update user'));
+        next(new HttpException(400, 'Failed to update user'));
+      }
+    } else {
+      response
+        .status(400)
+        .send(new ApiResponse(false, 'Invalid user id/status provided'));
+      next(new HttpException(400, 'Invalid user id/status provided'));
+    }
+  };
 
   public updateUser = async (
     request: Request,

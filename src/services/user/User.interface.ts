@@ -11,6 +11,7 @@ interface UserInterface {
   followers: string[];
   following: string[];
   password: string;
+  status: string;
 }
 
 export default UserInterface;

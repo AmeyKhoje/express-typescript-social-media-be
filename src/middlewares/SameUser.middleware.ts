@@ -6,7 +6,7 @@ import ApiResponse from 'responses/ApiResponse';
 const sameUserMiddleware = (fieldName: string) => {
   return (request: RequestWithUser, response: Response, next: NextFunction) => {
     const userIdFromRequest = request.user._id.toString();
-    const userIdFromBody = request.body[fieldName];
+    const userIdFromBody = request.body[fieldName].toString();
 
     if (userIdFromRequest !== userIdFromBody) {
       response
